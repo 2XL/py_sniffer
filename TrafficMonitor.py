@@ -3,6 +3,7 @@ import psutil, os, json, pcapy, socket, time, traceback, sys
 import netifaces as ni
 import whois
 import time
+import logging
 import copy
 from impacket.ImpactDecoder import EthDecoder
 from threading import Thread
@@ -15,15 +16,29 @@ import socket
 Thread que envia metainformacion de los paquetes por rabbit al manager
 """
 
-# meter todo lo relacionado al reporter aqui?
-# como implementar el enlace de datos?
-
 
 class TrafficMonitor(Thread):
 
-    def __init__(self, iface="eth0", read_timeout=100, promiscuous=False, max_bytes=65535, packet_limit=-1, client="dropbox", server=None, port=None, reporter=False):
+    def __init__(self,
+                 iface="eth0",              # network interface to capture traffic
+                 read_timeout=100,          # time elapse limit to read captured packet
+                 promiscuous=False,         # capture 3rd party traffic
+                 max_bytes=65535,           # packet size => packet_max_size
+                 packet_limit=-1,           # no, limit
+                 client="dropbox",          # target personal cloud
+                 server=None,               # target personal cloud sync server ip
+                 port=None,                 # target personal cloud sync server port
+                 reporter=False,
+                 args={
+
+                 }):                  # arguments as object
 
         if os.name == "nt":
+            self.platform_is_windows = True
+        else:
+            self.platform_is_windows = False
+
+        if self.platform_is_windows:
             iface = "\\Device\\NPF_{EDB20D9F-1750-46D6-ADE7-76940B8DF917}"
             if iface == pcapy.findalldevs()[0]:
                 print "OKEY"
@@ -34,6 +49,11 @@ class TrafficMonitor(Thread):
         if client.lower() == "stacksync" and server is None:
             print "server='server_ip' & port='server_port' are required!"
             sys.exit()
+
+
+
+
+
         super(TrafficMonitor, self).__init__()
         # to_ms # means buffering and lowering the amount of reads until filling the buffer or the timeout occurs instead of reading inmediately
         # Thread.__init__(self)
@@ -61,7 +81,6 @@ class TrafficMonitor(Thread):
         self.transport_dict = {}
         self.network_dict = {}
         self.traffic_flow_dict = {}
-        self.ip2hostname_cache = {}    #
         self.packet_limit = packet_limit
         self.register = None
         try:
@@ -747,6 +766,17 @@ def regkey_value(path, name="", start_key = None):
 
 if __name__ == '__main__':
 
+
+    # meter todo lo relacionado al reporter aqui?
+    # como implementar el enlace de datos?
+    # add filemode="w" to overwrite
+    logger = logging.getLogger("exampleApp")
+    logger.setLevel(logging.INFO)
+    fh = logging.FileHandler("TrafficMonitor.log")
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    fh.setFormatter(formatter)
+    logger.info("Program started")
+
     # size_dict = {"hit": 0, "size": 0}      # size_dict[source] = [counter, size]
     '''
     skip_list = {
@@ -787,3 +817,5 @@ if __name__ == '__main__':
     only the first snaplen bytes of that packet will be captured and provided as packet data.
     A value of 65535
     '''
+    # http://www.blog.pythonlibrary.org/2012/08/02/python-101-an-intro-to-logging/
+    logger.info("Done!")

@@ -1,8 +1,19 @@
-class Dropbox():
-    def __init__(self):
+from sniff import Sniff
 
+
+class Dropbox(Sniff):
+
+    def __init__(self, args):
+        super(self.__class__, self).__init__(args)
         self.whoami = (self).__class__.__name__
         print self.whoami
+        self.capture_filter_ips = [self.my_ip]
+        self.capture_filter_ports = ["443"]
+
+        self.live_capture.setfilter(
+         "(port " + " || port ".join(self.capture_filter_ports) + ") && (host " + " && host ".join(self.capture_filter_ips) + ")",  # filter
+        )
+
 
     def hello(self):
         print "{} say hello".format(self.whoami)

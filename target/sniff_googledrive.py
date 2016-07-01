@@ -1,12 +1,21 @@
+from sniff import Sniff
 
 
+class GoogleDrive(Sniff):
 
-class GoogleDrive():
+    def __init__(self, args):
 
-    def __init__(self):
-
+        super(self.__class__, self).__init__(args)
         self.whoami = (self).__class__.__name__
-        print self.whoami
+        print "Platform is windows: %s " % self.platform_is_windows
+        print "Sniff interface:     %s " % self.iface
+        self.capture_filter_ips = [self.my_ip]
+        self.capture_filter_ports = ["443"]
+
+        self.live_capture.setfilter(
+            "(port " + " || port ".join(self.capture_filter_ports) + ") && (host " + " && host ".join(self.capture_filter_ips) + ")",  # filter
+        )
+
 
     def hello(self):
         print "{} say hello".format(self.whoami)
