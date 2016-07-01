@@ -180,6 +180,7 @@ class Sniff(object):
         self.ip2hostname_cache = {}    #
         self.traffic_flow_dict = {}    #
         self.capture_thread = None
+        self.packet_index = 0 # index of the captured packet
 
     def capture(self):
         self.capture_thread = Thread(self.live_capture.loop(self.packet_limit, self.__on_recv_pckts))
