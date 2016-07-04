@@ -51,3 +51,20 @@ class Sniffer(Thread):
 
 
 
+
+if __name__ == '__main__':
+
+    # todo refactoring arguments?
+    config_client = {
+        "sync_server_ip": "stacksync.urv.cat",
+        "sync_server_port": 8080,
+        "packet_limit": -1,
+        "max_bytes": 65535,
+        "promiscuous": False,
+        "read_timeout": 100
+    }
+    tm = Sniffer(personal_cloud="dropbox", config=config_client)
+    tm.run() # intermediari que arranca trafficMonitor i permet realitzar get stats sobre la marcha o reiniciar el monitoreig
+    while True:
+        time.sleep(5)
+    print "end"
