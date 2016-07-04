@@ -4,7 +4,7 @@ import os
 from sniffer import Sniffer
 from hashlib import md5
 import sys
-import pdb;
+# import pdb;
 
 
 # execute single test
@@ -52,5 +52,5 @@ class SnifferTest(unittest.TestCase):
         print result
         result = sniff.rage_quit()
 
-        pdb.set_trace()
+        # pdb.set_trace()
         self.assertEqual(0, 0)

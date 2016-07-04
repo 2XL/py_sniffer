@@ -4,7 +4,7 @@ from target.sniff_googledrive import GoogleDrive as googledrive
 from target.sniff_owncloud import OwnCloud as ownloud
 from target.sniff_stacksync import StackSync as stacksync
 from threading import Thread
-
+import psutil, os, time
 
 class Sniffer(Thread):
 
@@ -24,8 +24,17 @@ class Sniffer(Thread):
 
     def rage_quit(self):
         self.register = False
+        parent_pid = os.getpid()
         print "Quiting"
+        parent_process = psutil.Process(parent_pid)
+        for child in parent_process.children(recursive=True):
+            child.kill()
         self.target.capture_quit()
+        # time.sleep(5)
+        print "Quit parent.kill()"
+        parent_process.kill()
+
+
         # print "Quited"
 
     def cancel(self):
