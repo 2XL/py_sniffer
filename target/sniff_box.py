@@ -96,184 +96,93 @@ class Box(Sniff):
 
         self.packet_index += 1
 
-        if self.desktop_client == "stacksync":  # private clouds you can distinguish by static_IP:static_PORT
-            # print "is stacksync"
-            flow = None
-            if src_ip == self.my_ip:
-                self.traffic_counter["total_up"]["size"] += total_size
-                self.traffic_counter["total_up"]["c"] += 1
-                flow = "up"
-            elif dst_ip == self.my_ip:
-                self.traffic_counter["total_up"]["size"] += total_size
-                self.traffic_counter["total_up"]["c"] += 1
-                flow = "down"
+ 
+        # print "parse the request uri ...  preparar los dominios que havia en el paper en formato regexp"
 
-            if flow is None:  #
-                return flow
+        # print src_port
+        # print dst_port
+        if src_port == 443 or dst_port == 443:
+            # print "Okey"
+            pass
+        else:
+            # print "Not"
+            return None  # not data nor metadata
 
-            # print flow
+        # print src_host
+        # print dst_host
+        flow = None
 
-            if flow == "down":
-                if src_port == 8080:
-                    # print "Data download {}".format(data_size)
-                    self.traffic_counter["data_down"]["size"] += total_size
-                    self.traffic_counter["data_down"]["c"] += 1
-                elif src_port == 5672:
-                    # print "Meta down {}".format(data_size)
-                    self.traffic_counter["meta_down"]["size"] += total_size
-                    self.traffic_counter["meta_down"]["c"] += 1
+        if dst_port == 443:
+            flow = "up"
+            self.metric_curr["total_up"]["size"] += total_size
+            self.metric_curr["total_up"]["c"] += 1
+        elif src_port == 443:
+            self.metric_curr["total_down"]["size"] += total_size
+            self.metric_curr["total_down"]["c"] += 1
+            flow = "down"
+
+        if flow is None:  # else: unknown flow
+            return flow
+
+        # print "the flow is: {}".format(flow)
+        # data goes through
+        if flow == "down":
+            if "d.v.dropbox.com" in src_host:
+                self.metric_curr["meta_down"]["size"] += total_size
+                self.metric_curr["meta_down"]["c"] += 1
+            elif "cloudfront" in src_host:
+                # im download from server == data down
+                self.metric_curr["data_down"]["size"] += total_size
+                self.metric_curr["data_down"]["c"] += 1
+            elif "dropbox" in src_host:
+                self.metric_curr["meta_down"]["size"] += total_size
+                self.metric_curr["meta_down"]["c"] += 1
+            elif "amazonaws" in src_host:
+                self.metric_curr["data_down"]["size"] += total_size
+                self.metric_curr["data_down"]["c"] += 1
             else:
-                if dst_port == 8080:
-                    # print "Data upload {}".format(data_size)
-                    self.traffic_counter["data_up"]["size"] += total_size
-                    self.traffic_counter["data_up"]["c"] += 1
-                elif dst_port == 5672:
-                    # print "Meta upload {}".format(data_size)
-                    self.traffic_counter["meta_up"]["size"] += total_size
-                    self.traffic_counter["meta_up"]["c"] += 1
+                # use whois to resole this
+                self.metric_curr["misc_down"]["size"] += total_size
+                self.metric_curr["misc_down"]["c"] += 1
+        # elif flow == "up":
+        else:
 
-        elif self.desktop_client == "dropbox":
-            # print "parse the request uri ...  preparar los dominios que havia en el paper en formato regexp"
-
-            # print src_port
-            # print dst_port
-            if src_port == 443 or dst_port == 443:
-                # print "Okey"
-                pass
+            if "d.v.dropbox.com" in dst_host:
+                self.metric_curr["meta_up"]["size"] += total_size
+                self.metric_curr["meta_up"]["c"] += 1
+            elif "cloudfront" in dst_host:
+                # im download from server == data down
+                self.metric_curr["data_up"]["size"] += total_size
+                self.metric_curr["data_up"]["c"] += 1
+            elif "dropbox" in dst_host:
+                self.metric_curr["meta_up"]["size"] += total_size
+                self.metric_curr["meta_up"]["c"] += 1
+            elif "amazonaws" in dst_host:
+                self.metric_curr["data_up"]["size"] += total_size
+                self.metric_curr["data_up"]["c"] += 1
             else:
-                # print "Not"
-                return None  # not data nor metadata
-
-            # print src_host
-            # print dst_host
-            flow = None
-
-            if dst_port == 443:
-                flow = "up"
-                self.traffic_counter["total_up"]["size"] += total_size
-                self.traffic_counter["total_up"]["c"] += 1
-            elif src_port == 443:
-                self.traffic_counter["total_down"]["size"] += total_size
-                self.traffic_counter["total_down"]["c"] += 1
-                flow = "down"
-
-            if flow is None:  # else: unknown flow
-                return flow
-
-            # print "the flow is: {}".format(flow)
-            # data goes through
-            if flow == "down":
-                if "d.v.dropbox.com" in src_host:
-                    self.traffic_counter["meta_down"]["size"] += total_size
-                    self.traffic_counter["meta_down"]["c"] += 1
-                elif "cloudfront" in src_host:
-                    # im download from server == data down
-                    self.traffic_counter["data_down"]["size"] += total_size
-                    self.traffic_counter["data_down"]["c"] += 1
-                elif "dropbox" in src_host:
-                    self.traffic_counter["meta_down"]["size"] += total_size
-                    self.traffic_counter["meta_down"]["c"] += 1
-                elif "amazonaws" in src_host:
-                    self.traffic_counter["data_down"]["size"] += total_size
-                    self.traffic_counter["data_down"]["c"] += 1
-                else:
-                    # use whois to resole this
-                    self.traffic_counter["misc_down"]["size"] += total_size
-                    self.traffic_counter["misc_down"]["c"] += 1
-            # elif flow == "up":
-            else:
-
-                if "d.v.dropbox.com" in dst_host:
-                    self.traffic_counter["meta_up"]["size"] += total_size
-                    self.traffic_counter["meta_up"]["c"] += 1
-                elif "cloudfront" in dst_host:
-                    # im download from server == data down
-                    self.traffic_counter["data_up"]["size"] += total_size
-                    self.traffic_counter["data_up"]["c"] += 1
-                elif "dropbox" in dst_host:
-                    self.traffic_counter["meta_up"]["size"] += total_size
-                    self.traffic_counter["meta_up"]["c"] += 1
-                elif "amazonaws" in dst_host:
-                    self.traffic_counter["data_up"]["size"] += total_size
-                    self.traffic_counter["data_up"]["c"] += 1
-                else:
-                    # use whois to resolve this ip's # aqui no entrara nunca ni referenciando por ip
-                    self.traffic_counter["misc_up"]["size"] += total_size
-                    self.traffic_counter["misc_up"]["c"] += 1
+                # use whois to resolve this ip's # aqui no entrara nunca ni referenciando por ip
+                self.metric_curr["misc_up"]["size"] += total_size
+                self.metric_curr["misc_up"]["c"] += 1
 
 
 
-
-        elif self.desktop_client == "mega":
-            # print "parse the request uri ...  preparar los dominios que havia en el paper en formato regexp"
-
-            # print src_port
-            # print dst_port
-            if src_port == 443 or dst_port == 443:
-                # print "Okey"
-                pass
-            else:
-                # print "Not"
-                return None  # not data nor metadata
-
-            # print src_host
-            # print dst_host
-            flow = None
-
-            if dst_port == 443:
-                flow = "up"
-                self.traffic_counter["total_up"]["size"] += total_size
-                self.traffic_counter["total_up"]["c"] += 1
-            elif src_port == 443:
-                self.traffic_counter["total_down"]["size"] += total_size
-                self.traffic_counter["total_down"]["c"] += 1
-                flow = "down"
-
-            if flow is None:  # else: unknown flow
-                return flow
-
-            # print "the flow is: {}".format(flow)
-            # data goes through
-            if flow == "down":
-                if "karere.mega.nz" in src_host:
-                    self.traffic_counter["meta_down"]["size"] += total_size
-                    self.traffic_counter["meta_down"]["c"] += 1
-                elif "api.mega.nz" in src_host:
-                    self.traffic_counter["data_down"]["size"] += total_size
-                    self.traffic_counter["data_down"]["c"] += 1
-                else:
-                    # use whois to resole this
-                    self.traffic_counter["misc_down"]["size"] += total_size
-                    self.traffic_counter["misc_down"]["c"] += 1
-            # elif flow == "up":
-            else:
-                if "mega.nz" in dst_host:
-                    self.traffic_counter["meta_up"]["size"] += total_size
-                    self.traffic_counter["meta_up"]["c"] += 1
-                elif "amazonaws" in dst_host:
-                    self.traffic_counter["data_up"]["size"] += total_size
-                    self.traffic_counter["data_up"]["c"] += 1
-                else:
-                    # use whois to resolve this ip's # aqui no entrara nunca ni referenciando por ip
-                    self.traffic_counter["misc_up"]["size"] += total_size
-                    self.traffic_counter["misc_up"]["c"] += 1
-
-
+ 
 
         ## classifica data & metadata per dropbox
 
         # print "{}:{}   ~>>~   {}:{}".format(src_host, src_port, dst_host, dst_port)
         '''
-        print "Meta up:   {}".format(self.traffic_counter["meta_up"]["size"])
-        print "Meta down: {}".format(self.traffic_counter["meta_down"]["size"])
-        print "Data up:   {}".format(self.traffic_counter["data_up"]["size"])
-        print "Data down: {}".format(self.traffic_counter["data_down"]["size"])
-        print "Comp up:   {}".format(self.traffic_counter["comp_up"]["size"])
-        print "Comp down: {}".format(self.traffic_counter["comp_down"]["size"])
-        print "Misc up:   {}".format(self.traffic_counter["misc_up"]["size"])
-        print "Misc down: {}".format(self.traffic_counter["misc_down"]["size"])
-        print "Total up:   {}".format(self.traffic_counter["total_up"]["size"])
-        print "Total down: {}".format(self.traffic_counter["total_down"]["size"])
+        print "Meta up:   {}".format(self.metric_curr["meta_up"]["size"])
+        print "Meta down: {}".format(self.metric_curr["meta_down"]["size"])
+        print "Data up:   {}".format(self.metric_curr["data_up"]["size"])
+        print "Data down: {}".format(self.metric_curr["data_down"]["size"])
+        print "Comp up:   {}".format(self.metric_curr["comp_up"]["size"])
+        print "Comp down: {}".format(self.metric_curr["comp_down"]["size"])
+        print "Misc up:   {}".format(self.metric_curr["misc_up"]["size"])
+        print "Misc down: {}".format(self.metric_curr["misc_down"]["size"])
+        print "Total up:   {}".format(self.metric_curr["total_up"]["size"])
+        print "Total down: {}".format(self.metric_curr["total_down"]["size"])
         '''
 
         '''
@@ -281,12 +190,12 @@ class Box(Sniff):
                                                                                        dst_host, dst_port, flow)
         stat = "{0: >20}={1:>8} >> meta [{2: >10}/{3: >10}] data[{4: >10}/{5: >10}] total[{6: >10}/{7: >10}]".format(
                 self.packet_index, self.get_time(),
-                self.traffic_counter["meta_up"]["size"],
-                self.traffic_counter["meta_down"]["size"],
-                self.traffic_counter["data_up"]["size"],
-                self.traffic_counter["data_down"]["size"],
-                self.traffic_counter["total_up"]["size"],
-                self.traffic_counter["total_down"]["size"]
+                self.metric_curr["meta_up"]["size"],
+                self.metric_curr["meta_down"]["size"],
+                self.metric_curr["data_up"]["size"],
+                self.metric_curr["data_down"]["size"],
+                self.metric_curr["total_up"]["size"],
+                self.metric_curr["total_down"]["size"]
         )
 
         print desc
@@ -294,12 +203,12 @@ class Box(Sniff):
         '''
         '''
         print "{}:{}   ~>>~   {}:{}".format(src_host, src_port, dst_host, dst_port)
-        print "Meta up:   {}".format(sizeof_fmt(self.traffic_counter["meta_up"]["size"]))
-        print "Meta down: {}".format(sizeof_fmt(self.traffic_counter["meta_down"]["size"]))
-        print "Data up:   {}".format(sizeof_fmt(self.traffic_counter["data_up"]["size"]))
-        print "Data down: {}".format(sizeof_fmt(self.traffic_counter["data_down"]["size"]))
-        print "Comp up:   {}".format(sizeof_fmt(self.traffic_counter["comp_up"]["size"]))
-        print "Comp down: {}".format(sizeof_fmt(self.traffic_counter["comp_down"]["size"]))
+        print "Meta up:   {}".format(sizeof_fmt(self.metric_curr["meta_up"]["size"]))
+        print "Meta down: {}".format(sizeof_fmt(self.metric_curr["meta_down"]["size"]))
+        print "Data up:   {}".format(sizeof_fmt(self.metric_curr["data_up"]["size"]))
+        print "Data down: {}".format(sizeof_fmt(self.metric_curr["data_down"]["size"]))
+        print "Comp up:   {}".format(sizeof_fmt(self.metric_curr["comp_up"]["size"]))
+        print "Comp down: {}".format(sizeof_fmt(self.metric_curr["comp_down"]["size"]))
         '''
 
         # http://www.wired.com/2016/03/epic-story-dropboxs-exodus-amazon-cloud-empire/
@@ -332,7 +241,7 @@ class Box(Sniff):
                 self.traffic_port["server_in_port"][dst_key] = 1
 
         # print self.traffic_port
-        # print self.traffic_counter
+        # print self.metric_curr
         '''
         if self.register:
             print "packet received - REGISTERED"
@@ -342,5 +251,5 @@ class Box(Sniff):
         # print ip2hostname_cache
         # print traffic_flow_dict
         # print ">>>>"
-        self.traffic_counter['epoch'] = self.get_epoch_ms()
-        self.traffic_counter['idx'] = self.packet_index
+        self.metric_curr['epoch'] = self.get_epoch_ms()
+        self.metric_curr['idx'] = self.packet_index
