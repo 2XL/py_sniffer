@@ -18,7 +18,6 @@ class Sniffer(Thread):
             self.target = eval("{}".format(personal_cloud.lower()))(config)
 
     def run(self, interval=5):
-        print "START CAPTURE PID: "
         self.register = True
         return self.target.capture()
 
@@ -49,7 +48,8 @@ class Sniffer(Thread):
         self.target.hello()
         return 0
 
-
+    def notify_stats(self):
+        return self.target.notify_stats()
 
 def parseArgs(argv):
     personal_cloud = ''
@@ -69,8 +69,8 @@ def parseArgs(argv):
             personal_cloud = arg
         elif opt in ("-x", "--xrand"):
             random_variable = arg
-    print 'Personal_Cloud is "', personal_cloud
-    print 'Random_Variable is "', random_variable
+    print 'Personal_Cloud is %s ' % personal_cloud
+    print 'Random_Variable is %s' % random_variable
     return personal_cloud
 
 
@@ -98,5 +98,5 @@ if __name__ == '__main__':
         # idx += 1
         # print "Notify status... {}".format(idx)
         time.sleep(5)
-        print tm.target.notify_stats()
+        print tm.notify_stats()
     print "end"
