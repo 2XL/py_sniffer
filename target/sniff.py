@@ -11,6 +11,7 @@ import copy
 
 
 class Sniff(object):
+
     def __init__(self, args):
 
         if os.name == "nt":
@@ -180,12 +181,7 @@ class Sniff(object):
         self.ip2hostname_cache = {}    #
         self.traffic_flow_dict = {}    #
         self.capture_thread = None
-        self.packet_index = 0 # index of the captured packet
-
-    def capture(self):
-        self.capture_thread = Thread(self.live_capture.loop(self.packet_limit, self.__on_recv_pckts))
-        self.capture_thread.start()
-        return self.capture_thread
+        self.packet_index = 0  # index of the captured packet
 
     def get_hostname_by_ip(self, ip):
         if ip in self.ip2hostname_cache:

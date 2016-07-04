@@ -1,5 +1,5 @@
 from sniff import Sniff
-
+from threading import Thread
 
 class Dropbox(Sniff):
 
@@ -14,6 +14,13 @@ class Dropbox(Sniff):
          "(port " + " || port ".join(self.capture_filter_ports) + ") && (host " + " && host ".join(self.capture_filter_ips) + ")",  # filter
         )
 
+    def capture(self):
+        self.capture_thread = Thread(target=self.live_capture.loop, args=[self.packet_limit, self.__on_recv_pkts])
+        self.capture_thread.start()
+        return self.capture_thread
+
+    def capture_quit(self):
+        Thread.join(self.capture_thread, timeout=1)
 
     def hello(self):
         print "{} say hello".format(self.whoami)

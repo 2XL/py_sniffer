@@ -20,13 +20,13 @@ class Sniffer(Thread):
     def run(self, interval=5):
         print "START CAPTURE PID:"
         self.register = True
-        self.target.capture()
-        print "Capturing"
+        return self.target.capture()
 
-    def quit(self):
+    def rage_quit(self):
         self.register = False
-        self.target.stop_capture()
-        self.cancel()
+        print "Quiting"
+        self.target.capture_quit()
+        # print "Quited"
 
     def cancel(self):
         '''

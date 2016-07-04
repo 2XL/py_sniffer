@@ -1,7 +1,5 @@
 from sniff import Sniff
-import socket
-import pcap
-
+from threading import Thread
 
 class StackSync(Sniff):
     def __init__(self, args):
@@ -13,14 +11,27 @@ class StackSync(Sniff):
         self.live_capture.setfilter(
             "(port " + " || port ".join(self.capture_filter_ports) + ") && (host " + " && host ".join(self.capture_filter_ips) + ")",  # filter
         )
-
         print self.whoami
+
+    def capture(self):
+        self.capture_thread = Thread(target=self.live_capture.loop, args=[self.packet_limit, self.__on_recv_pkts])
+        self.capture_thread.start()
+        return self.capture_thread
+
+    def capture_quit(self):
+        # print "try terminate"
+        # self.capture_thread.terminate()
+        self.capture_thread.join(timeout=1)
+        # print "try kill"
+
+        # self.capture_thread.kill()
+
+
 
     def hello(self):
         print "{} say hello".format(self.whoami)
 
     def __on_recv_pkts(self, ip_header, data):
-
 
         # print ip_header
         # print "<<<<"
@@ -98,8 +109,6 @@ class StackSync(Sniff):
                 # print "Meta upload {}".format(data_size)
                 self.metric_curr["meta_up"]["size"] += total_size
                 self.metric_curr["meta_up"]["c"] += 1
-
-
  
         dst_key = "{}:{}".format(dst_host, dst_host)
         src_key = "{}:{}".format(src_host, src_port)
