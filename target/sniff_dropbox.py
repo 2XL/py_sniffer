@@ -136,7 +136,6 @@ class Dropbox(Sniff):
                 self.metric_curr["misc_up"]["size"] += total_size
                 self.metric_curr["misc_up"]["c"] += 1
 
-
         dst_key = "{}:{}".format(dst_host, dst_host)
         src_key = "{}:{}".format(src_host, src_port)
 

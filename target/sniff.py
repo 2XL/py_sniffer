@@ -6,7 +6,6 @@ import socket
 import time
 from time import gmtime, strftime
 import whois
-from threading import Thread
 import copy
 
 
@@ -168,6 +167,7 @@ class Sniff(object):
         self.capture_filter_ports = []
 
         self.is_root()
+        self.decoder = EthDecoder()     # packet decoder
 
         self.live_capture = pcapy.open_live(
             self.iface,
@@ -273,7 +273,8 @@ class Sniff(object):
                 print("r00thless!!! ")
             else:
                 print("Cannot run as a mortal. ")
-                # todo: > sys.exit()
+                # todo: >
+                sys.exit()
         except AttributeError:
             print "nt is ruthless, bypass rule is_root!!!"
 

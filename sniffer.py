@@ -4,7 +4,7 @@ from target.sniff_googledrive import GoogleDrive as googledrive
 from target.sniff_owncloud import OwnCloud as ownloud
 from target.sniff_stacksync import StackSync as stacksync
 from threading import Thread
-import psutil, os, time
+import psutil, os, time, sys, getopt
 
 class Sniffer(Thread):
 
@@ -51,6 +51,29 @@ class Sniffer(Thread):
 
 
 
+def parseArgs(argv):
+    personal_cloud = ''
+    random_variable = ''
+    try:
+        opts, args = getopt.getopt(argv,"hc:x:",["pclient="])
+        #opts, args = getopt.getopt(argv,"hc:x:",["pclient=","xrand="])
+    except getopt.GetoptError:
+        print 'test.py -c <personal_cloud> -x <random_variable>'
+        # sys.exit(2)
+        return None
+    for opt, arg in opts:
+        if opt == '-h':
+            print 'test.py -c <personal_cloud> -x <random_variable>'
+            sys.exit()
+        elif opt in ("-c", "--pclient"):
+            personal_cloud = arg
+        elif opt in ("-x", "--xrand"):
+            random_variable = arg
+    print 'Personal_Cloud is "', personal_cloud
+    print 'Random_Variable is "', random_variable
+    return personal_cloud
+
+
 
 if __name__ == '__main__':
 
@@ -63,8 +86,17 @@ if __name__ == '__main__':
         "promiscuous": False,
         "read_timeout": 100
     }
-    tm = Sniffer(personal_cloud="dropbox", config=config_client)
-    tm.run() # intermediari que arranca trafficMonitor i permet realitzar get stats sobre la marcha o reiniciar el monitoreig
+
+    personal_cloud = parseArgs(sys.argv[1:])
+    if personal_cloud is None:
+        personal_cloud = "dropbox"
+
+    tm = Sniffer(personal_cloud=personal_cloud, config=config_client)
+    tm.run()
+    # idx = 0
     while True:
+        # idx += 1
+        # print "Notify status... {}".format(idx)
         time.sleep(5)
+        print tm.target.notify_stats()
     print "end"
