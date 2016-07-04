@@ -18,7 +18,7 @@ class Sniffer(Thread):
             self.target = eval("{}".format(personal_cloud.lower()))(config)
 
     def run(self, interval=5):
-        print "START CAPTURE PID:"
+        print "START CAPTURE PID: "
         self.register = True
         return self.target.capture()
 
@@ -48,11 +48,6 @@ class Sniffer(Thread):
         #try:
         self.target.hello()
         return 0
-        #    return 0  # successfully logged to personal cloud service
-        # except Exception as ex:
-        #     print ex.message
-        #     print traceback.print_tb(None)
-        #     return 1
 
 
 
